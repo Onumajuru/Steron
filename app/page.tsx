@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function Home() {
   const [input, setInput] = useState("");
+
   const [messages, setMessages] = useState<
     { role: string; content: string }[]
   >([]);
@@ -11,65 +12,50 @@ export default function Home() {
   const sendMessage = async () => {
     if (!input) return;
 
-    const userMessage = input;
+    const userMessage = {
+      role: "user",
+      content: input,
+    };
 
     const updatedMessages = [
       ...messages,
-      {
-        role: "user",
-        content: userMessage,
-      },
+      userMessage,
     ];
 
     setMessages(updatedMessages);
 
     setInput("");
 
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: updatedMessages,
-      }),
-    });
-
-    if (!response.body) return;
-
-    const reader = response.body.getReader();
-
-    const decoder = new TextDecoder();
-
-    let assistantMessage = "";
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "",
-      },
-    ]);
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-
-      assistantMessage += chunk;
-
-      setMessages((prev) => {
-        const updated = [...prev];
-
-        updated[updated.length - 1] = {
-          role: "assistant",
-          content: assistantMessage,
-        };
-
-        return updated;
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+        }),
       });
+
+      const data = await response.json();
+
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          content: data.reply,
+        },
+      ]);
+    } catch (error) {
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          content:
+            "Error connecting to Steron.",
+        },
+      ]);
     }
   };
 
@@ -107,7 +93,7 @@ export default function Home() {
       <div
         style={{
           width: "100%",
-          maxWidth: "1000px",
+          maxWidth: "1200px",
           backgroundColor: "#111",
           border: "1px solid #00d8ff",
           borderRadius: "20px",
@@ -143,14 +129,22 @@ export default function Home() {
                   message.role === "user"
                     ? "flex-end"
                     : "flex-start",
+
                 backgroundColor:
                   message.role === "user"
-                    ? "#00a8cc"
+                    ? "#00bde3"
                     : "#222",
+
+                color: "white",
+
                 padding: "20px",
+
                 borderRadius: "20px",
+
                 maxWidth: "80%",
+
                 fontSize: "20px",
+
                 lineHeight: "1.6",
               }}
             >
@@ -167,13 +161,16 @@ export default function Home() {
         >
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) =>
+              setInput(e.target.value)
+            }
             placeholder="Ask Steron something..."
             style={{
               flex: 1,
               padding: "20px",
               borderRadius: "15px",
-              border: "1px solid #00d8ff",
+              border:
+                "1px solid #00d8ff",
               backgroundColor: "black",
               color: "white",
               fontSize: "22px",
