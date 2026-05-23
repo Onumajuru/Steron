@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import ReactMarkdown from "react-markdown";
+
 type Message = {
   role: "user" | "assistant";
   content: string;
@@ -25,6 +27,22 @@ export default function Home() {
     useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const saved =
+      localStorage.getItem(
+        "steron-memory"
+      );
+
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "steron-memory",
+      JSON.stringify(messages)
+    );
+
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
     });
@@ -48,7 +66,7 @@ export default function Home() {
       currentText += text[i];
 
       await new Promise((resolve) =>
-        setTimeout(resolve, 10)
+        setTimeout(resolve, 8)
       );
 
       setMessages([
@@ -103,10 +121,8 @@ export default function Home() {
         await response.json();
 
       const assistantReply =
-        typeof data.reply ===
-        "string"
-          ? data.reply
-          : "No response";
+        data.reply ||
+        "No response.";
 
       await typeMessage(
         assistantReply,
@@ -124,6 +140,14 @@ export default function Home() {
     }
 
     setLoading(false);
+  };
+
+  const clearChat = () => {
+    localStorage.removeItem(
+      "steron-memory"
+    );
+
+    setMessages([]);
   };
 
   return (
@@ -153,10 +177,10 @@ export default function Home() {
 
           color: "#00d8ff",
 
-          marginBottom: "10px",
-
           textShadow:
             "0px 0px 20px #00d8ff",
+
+          marginBottom: "10px",
         }}
       >
         STERON
@@ -178,15 +202,15 @@ export default function Home() {
         style={{
           width: "100%",
 
-          maxWidth: "1300px",
+          maxWidth: "1400px",
 
-          height: "80vh",
+          height: "82vh",
 
-          backgroundColor:
-            "rgba(17,17,17,0.95)",
+          background:
+            "rgba(10,10,10,0.95)",
 
           border:
-            "1px solid rgba(0,216,255,0.4)",
+            "1px solid rgba(0,216,255,0.3)",
 
           borderRadius: "25px",
 
@@ -197,20 +221,54 @@ export default function Home() {
           flexDirection: "column",
 
           boxShadow:
-            "0px 0px 40px rgba(0,216,255,0.15)",
+            "0px 0px 40px rgba(0,216,255,0.1)",
         }}
       >
-        <h2
+        <div
           style={{
-            fontSize: "60px",
+            display: "flex",
 
-            fontWeight: "bold",
+            justifyContent:
+              "space-between",
 
-            marginBottom: "25px",
+            alignItems: "center",
+
+            marginBottom: "20px",
           }}
         >
-          Chat with Steron
-        </h2>
+          <h2
+            style={{
+              fontSize: "60px",
+
+              fontWeight: "bold",
+            }}
+          >
+            Chat with Steron
+          </h2>
+
+          <button
+            onClick={clearChat}
+            style={{
+              background: "#111",
+
+              color: "#00d8ff",
+
+              border:
+                "1px solid #00d8ff",
+
+              padding:
+                "12px 20px",
+
+              borderRadius: "12px",
+
+              cursor: "pointer",
+
+              fontSize: "18px",
+            }}
+          >
+            Clear Chat
+          </button>
+        </div>
 
         <div
           style={{
@@ -247,7 +305,7 @@ export default function Home() {
                       message.role ===
                       "user"
                         ? "#00bde3"
-                        : "#1e1e1e",
+                        : "#1a1a1a",
 
                     color: "white",
 
@@ -262,14 +320,15 @@ export default function Home() {
 
                     lineHeight: "1.7",
 
-                    whiteSpace:
-                      "pre-wrap",
+                    overflowX: "auto",
 
                     boxShadow:
                       "0px 0px 15px rgba(0,0,0,0.4)",
                   }}
                 >
-                  {message.content}
+                  <ReactMarkdown>
+                    {message.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             )
@@ -286,8 +345,8 @@ export default function Home() {
             >
               <div
                 style={{
-                  backgroundColor:
-                    "#1e1e1e",
+                  background:
+                    "#1a1a1a",
 
                   padding: "20px",
 
@@ -333,7 +392,7 @@ export default function Home() {
             style={{
               flex: 1,
 
-              padding: "22px",
+              padding: "24px",
 
               borderRadius:
                 "18px",
@@ -341,7 +400,7 @@ export default function Home() {
               border:
                 "1px solid #00d8ff",
 
-              backgroundColor:
+              background:
                 "#000",
 
               color: "white",
@@ -356,7 +415,7 @@ export default function Home() {
             onClick={sendMessage}
             disabled={loading}
             style={{
-              backgroundColor:
+              background:
                 "#00bde3",
 
               color: "black",
@@ -364,7 +423,7 @@ export default function Home() {
               border: "none",
 
               padding:
-                "22px 45px",
+                "24px 40px",
 
               borderRadius:
                 "18px",
@@ -375,10 +434,6 @@ export default function Home() {
               fontSize: "22px",
 
               cursor: "pointer",
-
-              opacity: loading
-                ? 0.6
-                : 1,
             }}
           >
             {loading
