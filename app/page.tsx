@@ -13,10 +13,15 @@ export default function Home() {
 
     const userMessage = input;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: userMessage },
-    ]);
+    const updatedMessages = [
+      ...messages,
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ];
+
+    setMessages(updatedMessages);
 
     setInput("");
 
@@ -26,7 +31,7 @@ export default function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: userMessage,
+        messages: updatedMessages,
       }),
     });
 
@@ -40,7 +45,10 @@ export default function Home() {
 
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: "" },
+      {
+        role: "assistant",
+        content: "",
+      },
     ]);
 
     while (true) {

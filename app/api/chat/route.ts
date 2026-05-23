@@ -7,21 +7,20 @@ const openai = new OpenAI({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const message = body.message;
+
+    const messages = body.messages;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
+      stream: true,
       messages: [
         {
           role: "system",
-          content: "You are Steron, a futuristic AI operating system.",
+          content:
+            "You are Steron, a futuristic AI operating system that remembers conversations and speaks intelligently.",
         },
-        {
-          role: "user",
-          content: message,
-        },
+        ...messages,
       ],
-      stream: true,
     });
 
     const encoder = new TextEncoder();
@@ -29,8 +28,12 @@ export async function POST(req: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         for await (const chunk of response) {
-          const text = chunk.choices[0]?.delta?.content || "";
-          controller.enqueue(encoder.encode(text));
+          const text =
+            chunk.choices[0]?.delta?.content || "";
+
+          controller.enqueue(
+            encoder.encode(text)
+          );
         }
 
         controller.close();
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
     console.error(error);
 
     return Response.json({
-      error: "Streaming failed",
+      error: "Error talking to Steron",
     });
   }
 }
