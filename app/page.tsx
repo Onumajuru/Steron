@@ -44,7 +44,10 @@ export default function Home() {
         ...updatedMessages,
         {
           role: "assistant",
-          content: data.reply,
+          content:
+            data.reply ||
+            data.error ||
+            "No response",
         },
       ]);
     } catch (error) {
@@ -99,6 +102,8 @@ export default function Home() {
           borderRadius: "20px",
           padding: "30px",
           minHeight: "700px",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <h2
@@ -117,7 +122,7 @@ export default function Home() {
             flexDirection: "column",
             gap: "20px",
             marginBottom: "30px",
-            maxHeight: "500px",
+            flex: 1,
             overflowY: "auto",
           }}
         >
@@ -125,30 +130,37 @@ export default function Home() {
             <div
               key={index}
               style={{
-                alignSelf:
+                display: "flex",
+                justifyContent:
                   message.role === "user"
                     ? "flex-end"
                     : "flex-start",
-
-                backgroundColor:
-                  message.role === "user"
-                    ? "#00bde3"
-                    : "#222",
-
-                color: "white",
-
-                padding: "20px",
-
-                borderRadius: "20px",
-
-                maxWidth: "80%",
-
-                fontSize: "20px",
-
-                lineHeight: "1.6",
               }}
             >
-              {message.content}
+              <div
+                style={{
+                  backgroundColor:
+                    message.role === "user"
+                      ? "#00bde3"
+                      : "#222",
+
+                  color: "white",
+
+                  padding: "20px",
+
+                  borderRadius: "20px",
+
+                  maxWidth: "75%",
+
+                  fontSize: "24px",
+
+                  lineHeight: "1.6",
+
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {message.content}
+              </div>
             </div>
           ))}
         </div>
@@ -157,6 +169,7 @@ export default function Home() {
           style={{
             display: "flex",
             gap: "20px",
+            marginTop: "auto",
           }}
         >
           <input
@@ -164,6 +177,11 @@ export default function Home() {
             onChange={(e) =>
               setInput(e.target.value)
             }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
             placeholder="Ask Steron something..."
             style={{
               flex: 1,
@@ -174,6 +192,7 @@ export default function Home() {
               backgroundColor: "black",
               color: "white",
               fontSize: "22px",
+              outline: "none",
             }}
           />
 
