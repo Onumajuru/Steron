@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export default function Home() {
   const [input, setInput] = useState("");
 
   const [messages, setMessages] = useState<
-    { role: string; content: string }[]
+    Message[]
   >([]);
 
   const sendMessage = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
-    const userMessage = {
+    const userMessage: Message = {
       role: "user",
       content: input,
     };
@@ -29,10 +34,12 @@ export default function Home() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
+
         headers: {
           "Content-Type":
             "application/json",
         },
+
         body: JSON.stringify({
           messages: updatedMessages,
         }),
@@ -40,14 +47,16 @@ export default function Home() {
 
       const data = await response.json();
 
+      const assistantReply =
+        typeof data.reply === "string"
+          ? data.reply
+          : "No response";
+
       setMessages([
         ...updatedMessages,
         {
           role: "assistant",
-          content:
-            data.reply ||
-            data.error ||
-            "No response",
+          content: assistantReply,
         },
       ]);
     } catch (error) {
@@ -118,12 +127,12 @@ export default function Home() {
 
         <div
           style={{
+            flex: 1,
+            overflowY: "auto",
             display: "flex",
             flexDirection: "column",
             gap: "20px",
             marginBottom: "30px",
-            flex: 1,
-            overflowY: "auto",
           }}
         >
           {messages.map((message, index) => (
@@ -169,7 +178,6 @@ export default function Home() {
           style={{
             display: "flex",
             gap: "20px",
-            marginTop: "auto",
           }}
         >
           <input
