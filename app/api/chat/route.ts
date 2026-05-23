@@ -12,15 +12,34 @@ export async function POST(req: Request) {
 
     const completion =
       await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
+
         messages: [
           {
             role: "system",
-            content:
-              "You are Steron, a futuristic AI operating system.",
+            content: `
+You are Steron.
+
+A futuristic AI operating system.
+
+You are intelligent, friendly, highly advanced,
+and helpful.
+
+You remember previous conversation context.
+
+You respond naturally like ChatGPT.
+
+You are conversational, confident,
+and futuristic.
+            `,
           },
+
           ...messages,
         ],
+
+        temperature: 0.8,
+
+        max_tokens: 1000,
       });
 
     const reply =

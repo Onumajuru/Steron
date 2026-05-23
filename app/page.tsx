@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -8,7 +12,8 @@ type Message = {
 };
 
 export default function Home() {
-  const [input, setInput] = useState("");
+  const [input, setInput] =
+    useState("");
 
   const [loading, setLoading] =
     useState(false);
@@ -25,8 +30,40 @@ export default function Home() {
     });
   }, [messages]);
 
+  const typeMessage = async (
+    text: string,
+    updatedMessages: Message[]
+  ) => {
+    let currentText = "";
+
+    setMessages([
+      ...updatedMessages,
+      {
+        role: "assistant",
+        content: "",
+      },
+    ]);
+
+    for (let i = 0; i < text.length; i++) {
+      currentText += text[i];
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 10)
+      );
+
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          content: currentText,
+        },
+      ]);
+    }
+  };
+
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading)
+      return;
 
     const userMessage: Message = {
       role: "user",
@@ -45,33 +82,36 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
+      const response = await fetch(
+        "/api/chat",
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-        body: JSON.stringify({
-          messages: updatedMessages,
-        }),
-      });
+          body: JSON.stringify({
+            messages:
+              updatedMessages,
+          }),
+        }
+      );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       const assistantReply =
-        typeof data.reply === "string"
+        typeof data.reply ===
+        "string"
           ? data.reply
           : "No response";
 
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content: assistantReply,
-        },
-      ]);
+      await typeMessage(
+        assistantReply,
+        updatedMessages
+      );
     } catch (error) {
       setMessages([
         ...updatedMessages,
@@ -90,6 +130,7 @@ export default function Home() {
     <main
       style={{
         minHeight: "100vh",
+
         background:
           "linear-gradient(to bottom, #000000, #050816)",
 
@@ -186,52 +227,59 @@ export default function Home() {
             paddingRight: "10px",
           }}
         >
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-
-                justifyContent:
-                  message.role === "user"
-                    ? "flex-end"
-                    : "flex-start",
-              }}
-            >
+          {messages.map(
+            (message, index) => (
               <div
+                key={index}
                 style={{
-                  backgroundColor:
-                    message.role === "user"
-                      ? "#00bde3"
-                      : "#1e1e1e",
+                  display: "flex",
 
-                  color: "white",
-
-                  padding: "22px",
-
-                  borderRadius: "22px",
-
-                  maxWidth: "75%",
-
-                  fontSize: "24px",
-
-                  lineHeight: "1.7",
-
-                  whiteSpace: "pre-wrap",
-
-                  boxShadow:
-                    "0px 0px 15px rgba(0,0,0,0.4)",
+                  justifyContent:
+                    message.role ===
+                    "user"
+                      ? "flex-end"
+                      : "flex-start",
                 }}
               >
-                {message.content}
+                <div
+                  style={{
+                    backgroundColor:
+                      message.role ===
+                      "user"
+                        ? "#00bde3"
+                        : "#1e1e1e",
+
+                    color: "white",
+
+                    padding: "22px",
+
+                    borderRadius:
+                      "22px",
+
+                    maxWidth: "75%",
+
+                    fontSize: "24px",
+
+                    lineHeight: "1.7",
+
+                    whiteSpace:
+                      "pre-wrap",
+
+                    boxShadow:
+                      "0px 0px 15px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {message.content}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
 
           {loading && (
             <div
               style={{
                 display: "flex",
+
                 justifyContent:
                   "flex-start",
               }}
@@ -243,7 +291,8 @@ export default function Home() {
 
                   padding: "20px",
 
-                  borderRadius: "20px",
+                  borderRadius:
+                    "20px",
 
                   fontSize: "22px",
                 }}
@@ -268,10 +317,14 @@ export default function Home() {
           <input
             value={input}
             onChange={(e) =>
-              setInput(e.target.value)
+              setInput(
+                e.target.value
+              )
             }
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (
+                e.key === "Enter"
+              ) {
                 sendMessage();
               }
             }}
@@ -282,7 +335,8 @@ export default function Home() {
 
               padding: "22px",
 
-              borderRadius: "18px",
+              borderRadius:
+                "18px",
 
               border:
                 "1px solid #00d8ff",
@@ -312,9 +366,11 @@ export default function Home() {
               padding:
                 "22px 45px",
 
-              borderRadius: "18px",
+              borderRadius:
+                "18px",
 
-              fontWeight: "bold",
+              fontWeight:
+                "bold",
 
               fontSize: "22px",
 
