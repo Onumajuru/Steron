@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -10,12 +10,23 @@ type Message = {
 export default function Home() {
   const [input, setInput] = useState("");
 
-  const [messages, setMessages] = useState<
-    Message[]
-  >([]);
+  const [loading, setLoading] =
+    useState(false);
+
+  const [messages, setMessages] =
+    useState<Message[]>([]);
+
+  const bottomRef =
+    useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = {
       role: "user",
@@ -30,6 +41,8 @@ export default function Home() {
     setMessages(updatedMessages);
 
     setInput("");
+
+    setLoading(true);
 
     try {
       const response = await fetch("/api/chat", {
@@ -69,25 +82,40 @@ export default function Home() {
         },
       ]);
     }
+
+    setLoading(false);
   };
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        backgroundColor: "black",
+        background:
+          "linear-gradient(to bottom, #000000, #050816)",
+
         color: "white",
+
         display: "flex",
+
         flexDirection: "column",
+
         alignItems: "center",
-        padding: "40px",
+
+        padding: "30px",
       }}
     >
       <h1
         style={{
-          fontSize: "70px",
+          fontSize: "80px",
+
           fontWeight: "bold",
+
           color: "#00d8ff",
+
+          marginBottom: "10px",
+
+          textShadow:
+            "0px 0px 20px #00d8ff",
         }}
       >
         STERON
@@ -95,7 +123,10 @@ export default function Home() {
 
       <p
         style={{
-          fontSize: "20px",
+          fontSize: "22px",
+
+          opacity: 0.8,
+
           marginBottom: "30px",
         }}
       >
@@ -105,21 +136,36 @@ export default function Home() {
       <div
         style={{
           width: "100%",
-          maxWidth: "1200px",
-          backgroundColor: "#111",
-          border: "1px solid #00d8ff",
-          borderRadius: "20px",
+
+          maxWidth: "1300px",
+
+          height: "80vh",
+
+          backgroundColor:
+            "rgba(17,17,17,0.95)",
+
+          border:
+            "1px solid rgba(0,216,255,0.4)",
+
+          borderRadius: "25px",
+
           padding: "30px",
-          minHeight: "700px",
+
           display: "flex",
+
           flexDirection: "column",
+
+          boxShadow:
+            "0px 0px 40px rgba(0,216,255,0.15)",
         }}
       >
         <h2
           style={{
             fontSize: "60px",
+
             fontWeight: "bold",
-            marginBottom: "30px",
+
+            marginBottom: "25px",
           }}
         >
           Chat with Steron
@@ -128,11 +174,16 @@ export default function Home() {
         <div
           style={{
             flex: 1,
+
             overflowY: "auto",
+
             display: "flex",
+
             flexDirection: "column",
-            gap: "20px",
-            marginBottom: "30px",
+
+            gap: "25px",
+
+            paddingRight: "10px",
           }}
         >
           {messages.map((message, index) => (
@@ -140,6 +191,7 @@ export default function Home() {
               key={index}
               style={{
                 display: "flex",
+
                 justifyContent:
                   message.role === "user"
                     ? "flex-end"
@@ -151,33 +203,66 @@ export default function Home() {
                   backgroundColor:
                     message.role === "user"
                       ? "#00bde3"
-                      : "#222",
+                      : "#1e1e1e",
 
                   color: "white",
 
-                  padding: "20px",
+                  padding: "22px",
 
-                  borderRadius: "20px",
+                  borderRadius: "22px",
 
                   maxWidth: "75%",
 
                   fontSize: "24px",
 
-                  lineHeight: "1.6",
+                  lineHeight: "1.7",
 
                   whiteSpace: "pre-wrap",
+
+                  boxShadow:
+                    "0px 0px 15px rgba(0,0,0,0.4)",
                 }}
               >
                 {message.content}
               </div>
             </div>
           ))}
+
+          {loading && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "flex-start",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor:
+                    "#1e1e1e",
+
+                  padding: "20px",
+
+                  borderRadius: "20px",
+
+                  fontSize: "22px",
+                }}
+              >
+                Steron is thinking...
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef}></div>
         </div>
 
         <div
           style={{
             display: "flex",
+
             gap: "20px",
+
+            marginTop: "25px",
           }}
         >
           <input
@@ -190,34 +275,59 @@ export default function Home() {
                 sendMessage();
               }
             }}
-            placeholder="Ask Steron something..."
+            placeholder="Ask Steron anything..."
+
             style={{
               flex: 1,
-              padding: "20px",
-              borderRadius: "15px",
+
+              padding: "22px",
+
+              borderRadius: "18px",
+
               border:
                 "1px solid #00d8ff",
-              backgroundColor: "black",
+
+              backgroundColor:
+                "#000",
+
               color: "white",
+
               fontSize: "22px",
+
               outline: "none",
             }}
           />
 
           <button
             onClick={sendMessage}
+            disabled={loading}
             style={{
-              backgroundColor: "#00bde3",
+              backgroundColor:
+                "#00bde3",
+
               color: "black",
+
               border: "none",
-              padding: "20px 40px",
-              borderRadius: "15px",
+
+              padding:
+                "22px 45px",
+
+              borderRadius: "18px",
+
               fontWeight: "bold",
+
               fontSize: "22px",
+
               cursor: "pointer",
+
+              opacity: loading
+                ? 0.6
+                : 1,
             }}
           >
-            Send
+            {loading
+              ? "Thinking..."
+              : "Send"}
           </button>
         </div>
       </div>
