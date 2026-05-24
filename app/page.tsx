@@ -352,7 +352,19 @@ export default function Home() {
                         : "bg-zinc-900"
                     }`}
                   >
-                    {msg.content}
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: msg.content
+                          .replace(
+                            /\n/g,
+                            "<br />"
+                          )
+                          .replace(
+                            /\[([^\]]+)\]\(([^)]+)\)/g,
+                            '<a href="$2" target="_blank" class="text-cyan-400 underline">$1</a>'
+                          ),
+                      }}
+                    />
                   </div>
                 )}
               </div>
