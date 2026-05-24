@@ -26,30 +26,57 @@ export default function Home() {
 
   const [chats, setChats] = useState<
     Chat[]
-  >([
-    {
-      id: 1,
-      title: "New Chat",
-      messages: [],
-    },
-  ]);
+  >([]);
 
   const [activeChatId, setActiveChatId] =
-    useState(1);
+    useState<number | null>(null);
 
   const messagesEndRef =
     useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const savedChats =
+      localStorage.getItem("steron_chats");
+
+    if (savedChats) {
+      const parsedChats =
+        JSON.parse(savedChats);
+
+      setChats(parsedChats);
+
+      setActiveChatId(parsedChats[0]?.id);
+    } else {
+      const firstChat = {
+        id: Date.now(),
+        title: "New Chat",
+        messages: [],
+      };
+
+      setChats([firstChat]);
+
+      setActiveChatId(firstChat.id);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (chats.length > 0) {
+      localStorage.setItem(
+        "steron_chats",
+        JSON.stringify(chats)
+      );
+    }
+  }, [chats]);
+
   const activeChat =
     chats.find(
       (chat) => chat.id === activeChatId
-    )!;
+    );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [activeChat.messages]);
+  }, [activeChat?.messages]);
 
   function updateMessages(
     newMessages: Message[]
@@ -67,7 +94,7 @@ export default function Home() {
   }
 
   async function sendMessage() {
-    if (!input) return;
+    if (!input || !activeChat) return;
 
     const userMessage = {
       role: "user",
@@ -143,7 +170,7 @@ export default function Home() {
   }
 
   async function generateImage() {
-    if (!input) return;
+    if (!input || !activeChat) return;
 
     const prompt = input;
 
@@ -299,7 +326,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
 
-          {activeChat.messages.map(
+          {activeChat?.messages.map(
             (msg, index) => (
               <div
                 key={index}
