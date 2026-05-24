@@ -17,29 +17,12 @@ export async function POST(req: Request) {
         messages: [
           {
             role: "system",
-            content: `
-You are Steron.
-
-A futuristic AI operating system.
-
-You are intelligent, friendly, highly advanced,
-and helpful.
-
-You remember previous conversation context.
-
-You respond naturally like ChatGPT.
-
-You are conversational, confident,
-and futuristic.
-            `,
+            content:
+              "You are Steron, a futuristic AI operating system. Be smart, friendly, and conversational.",
           },
 
           ...messages,
         ],
-
-        temperature: 0.8,
-
-        max_tokens: 1000,
       });
 
     const reply =
@@ -49,7 +32,7 @@ and futuristic.
       reply,
     });
   } catch (error) {
-    console.error(error);
+    console.log(error);
 
     return Response.json(
       {
