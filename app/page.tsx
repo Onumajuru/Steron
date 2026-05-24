@@ -24,6 +24,9 @@ export default function Home() {
   const [loading, setLoading] =
     useState(false);
 
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null);
+
   const [chats, setChats] = useState<
     Chat[]
   >([]);
@@ -224,6 +227,44 @@ export default function Home() {
     setLoading(false);
   }
 
+  async function uploadFile() {
+    if (!selectedFile || !activeChat)
+      return;
+
+    const formData = new FormData();
+
+    formData.append(
+      "file",
+      selectedFile
+    );
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "/api/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      updateMessages([
+        ...activeChat.messages,
+        {
+          role: "assistant",
+          content: data.reply,
+        },
+      ]);
+    } catch (error) {
+      console.log(error);
+    }
+
+    setLoading(false);
+  }
+
   async function handleSend() {
     if (
       input.toLowerCase().includes(
@@ -279,6 +320,19 @@ export default function Home() {
 
       setInput(transcript);
     };
+  }
+
+  function handleDrop(
+    e: React.DragEvent<HTMLDivElement>
+  ) {
+    e.preventDefault();
+
+    const file =
+      e.dataTransfer.files[0];
+
+    if (file) {
+      setSelectedFile(file);
+    }
   }
 
   return (
@@ -381,31 +435,64 @@ export default function Home() {
 
         </div>
 
-        <div className="p-6 border-t border-cyan-500 flex gap-4">
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) =>
+            e.preventDefault()
+          }
+          className="border-t border-cyan-500 p-4"
+        >
 
-          <button
-            onClick={startVoiceInput}
-            className="bg-purple-500 hover:bg-purple-400 transition px-6 rounded-2xl text-xl"
-          >
-            🎤
-          </button>
+          <div className="border-2 border-dashed border-cyan-500 rounded-2xl p-4 text-center mb-4">
 
-          <input
-            value={input}
-            onChange={(e) =>
-              setInput(e.target.value)
-            }
-            placeholder="Ask Steron something..."
-            className="flex-1 bg-black border border-cyan-500 rounded-2xl px-6 py-4 text-xl outline-none focus:border-cyan-300"
-          />
+            <p className="text-cyan-400">
+              Drag & Drop PDF/TXT files
+              here
+            </p>
 
-          <button
-            onClick={handleSend}
-            className="bg-cyan-500 hover:bg-cyan-400 transition px-8 py-4 rounded-2xl text-black font-bold text-xl"
-          >
-            Send
-          </button>
+            {selectedFile && (
+              <p className="mt-2 text-sm">
+                Selected:
+                {" "}
+                {selectedFile.name}
+              </p>
+            )}
 
+          </div>
+
+          <div className="flex gap-4">
+
+            <button
+              onClick={uploadFile}
+              className="bg-yellow-500 hover:bg-yellow-400 transition px-6 rounded-2xl text-black font-bold"
+            >
+              Upload
+            </button>
+
+            <button
+              onClick={startVoiceInput}
+              className="bg-purple-500 hover:bg-purple-400 transition px-6 rounded-2xl text-xl"
+            >
+              🎤
+            </button>
+
+            <input
+              value={input}
+              onChange={(e) =>
+                setInput(e.target.value)
+              }
+              placeholder="Ask Steron something..."
+              className="flex-1 bg-black border border-cyan-500 rounded-2xl px-6 py-4 text-xl outline-none focus:border-cyan-300"
+            />
+
+            <button
+              onClick={handleSend}
+              className="bg-cyan-500 hover:bg-cyan-400 transition px-8 py-4 rounded-2xl text-black font-bold text-xl"
+            >
+              Send
+            </button>
+
+          </div>
         </div>
       </div>
     </main>
