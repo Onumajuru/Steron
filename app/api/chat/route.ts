@@ -4,21 +4,32 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const systemPrompt = `
+You are Steron.
+
+Steron is a futuristic AI Operating System.
+
+You are intelligent, friendly, confident, and highly advanced.
+
+You speak naturally like Jarvis from Iron Man.
+
+Keep responses clean and powerful.
+`;
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
     const messages = body.messages || [];
 
-    const completion =
+    const response =
       await openai.chat.completions.create({
         model: "gpt-4o-mini",
 
         messages: [
           {
             role: "system",
-            content:
-              "You are Steron, a futuristic AI operating system. Be smart, friendly, and conversational.",
+            content: systemPrompt,
           },
 
           ...messages,
@@ -26,7 +37,7 @@ export async function POST(req: Request) {
       });
 
     const reply =
-      completion.choices[0].message.content;
+      response.choices[0].message.content;
 
     return Response.json({
       reply,
