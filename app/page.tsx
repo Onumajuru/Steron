@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 
 type Message = {
   role: string;
@@ -157,6 +161,39 @@ export default function Home() {
     setLoading(false);
   }
 
+  function startVoiceInput() {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert(
+        "Voice recognition not supported"
+      );
+      return;
+    }
+
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang = "en-US";
+
+    recognition.start();
+
+    recognition.onresult = (
+      event: any
+    ) => {
+      const transcript =
+        event.results[0][0].transcript;
+
+      setInput(transcript);
+    };
+  }
+
+  function clearChat() {
+    setMessages([]);
+  }
+
   async function handleSend() {
     if (
       input.toLowerCase().includes(
@@ -170,13 +207,29 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center p-10">
-      <h1 className="text-6xl font-bold mb-8 text-cyan-400">
+    <main className="min-h-screen bg-black text-white flex flex-col items-center p-8">
+
+      <h1 className="text-7xl font-bold text-cyan-400 mb-8">
         STERON
       </h1>
 
-      <div className="w-full max-w-6xl h-[80vh] border border-cyan-500 rounded-3xl bg-zinc-950 flex flex-col overflow-hidden shadow-2xl shadow-cyan-500/20">
+      <div className="w-full max-w-7xl h-[85vh] bg-zinc-950 border border-cyan-500 rounded-3xl flex flex-col overflow-hidden shadow-2xl shadow-cyan-500/20">
+
+        <div className="flex justify-between items-center p-4 border-b border-cyan-500">
+          <h2 className="text-3xl font-bold">
+            Chat with Steron
+          </h2>
+
+          <button
+            onClick={clearChat}
+            className="bg-red-500 px-5 py-2 rounded-xl"
+          >
+            Clear Chat
+          </button>
+        </div>
+
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -198,7 +251,7 @@ export default function Home() {
                 <div
                   className={`max-w-[70%] p-5 rounded-3xl text-2xl ${
                     msg.role === "user"
-                      ? "bg-cyan-500 text-white"
+                      ? "bg-cyan-500"
                       : "bg-zinc-900"
                   }`}
                 >
@@ -209,15 +262,24 @@ export default function Home() {
           ))}
 
           {loading && (
-            <div className="text-cyan-400">
+            <div className="text-cyan-400 animate-pulse text-xl">
               Steron is thinking...
             </div>
           )}
 
           <div ref={messagesEndRef} />
+
         </div>
 
         <div className="p-6 border-t border-cyan-500 flex gap-4">
+
+          <button
+            onClick={startVoiceInput}
+            className="bg-purple-500 px-6 rounded-2xl text-xl"
+          >
+            🎤
+          </button>
+
           <input
             value={input}
             onChange={(e) =>
@@ -233,6 +295,7 @@ export default function Home() {
           >
             Send
           </button>
+
         </div>
       </div>
     </main>
