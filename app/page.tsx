@@ -11,23 +11,60 @@ type Message = {
   content: string;
 };
 
-export default function Home() {
-  const [messages, setMessages] =
-    useState<Message[]>([]);
+type Chat = {
+  id: number;
+  title: string;
+  messages: Message[];
+};
 
-  const [input, setInput] = useState("");
+export default function Home() {
+  const [input, setInput] =
+    useState("");
 
   const [loading, setLoading] =
     useState(false);
 
+  const [chats, setChats] = useState<
+    Chat[]
+  >([
+    {
+      id: 1,
+      title: "New Chat",
+      messages: [],
+    },
+  ]);
+
+  const [activeChatId, setActiveChatId] =
+    useState(1);
+
   const messagesEndRef =
     useRef<HTMLDivElement>(null);
+
+  const activeChat =
+    chats.find(
+      (chat) => chat.id === activeChatId
+    )!;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [activeChat.messages]);
+
+  function updateMessages(
+    newMessages: Message[]
+  ) {
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === activeChatId
+          ? {
+              ...chat,
+              messages: newMessages,
+            }
+          : chat
+      )
+    );
+  }
 
   async function sendMessage() {
     if (!input) return;
@@ -38,11 +75,11 @@ export default function Home() {
     };
 
     const updatedMessages = [
-      ...messages,
+      ...activeChat.messages,
       userMessage,
     ];
 
-    setMessages(updatedMessages);
+    updateMessages(updatedMessages);
 
     setInput("");
 
@@ -71,8 +108,8 @@ export default function Home() {
 
       let assistantMessage = "";
 
-      setMessages((prev) => [
-        ...prev,
+      updateMessages([
+        ...updatedMessages,
         {
           role: "assistant",
           content: "",
@@ -90,16 +127,13 @@ export default function Home() {
 
         assistantMessage += chunk;
 
-        setMessages((prev) => {
-          const updated = [...prev];
-
-          updated[updated.length - 1] = {
+        updateMessages([
+          ...updatedMessages,
+          {
             role: "assistant",
             content: assistantMessage,
-          };
-
-          return updated;
-        });
+          },
+        ]);
       }
     } catch (error) {
       console.log(error);
@@ -113,13 +147,15 @@ export default function Home() {
 
     const prompt = input;
 
-    setMessages((prev) => [
-      ...prev,
+    const updatedMessages = [
+      ...activeChat.messages,
       {
         role: "user",
         content: prompt,
       },
-    ]);
+    ];
+
+    updateMessages(updatedMessages);
 
     setInput("");
 
@@ -147,8 +183,8 @@ export default function Home() {
       const image =
         `data:image/png;base64,${data.image}`;
 
-      setMessages((prev) => [
-        ...prev,
+      updateMessages([
+        ...updatedMessages,
         {
           role: "assistant",
           content: image,
@@ -161,10 +197,38 @@ export default function Home() {
     setLoading(false);
   }
 
+  async function handleSend() {
+    if (
+      input.toLowerCase().includes(
+        "generate image"
+      )
+    ) {
+      generateImage();
+    } else {
+      sendMessage();
+    }
+  }
+
+  function createNewChat() {
+    const newChat = {
+      id: Date.now(),
+      title: "New Chat",
+      messages: [],
+    };
+
+    setChats((prev) => [
+      newChat,
+      ...prev,
+    ]);
+
+    setActiveChatId(newChat.id);
+  }
+
   function startVoiceInput() {
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      (window as any)
+        .webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert(
@@ -190,76 +254,83 @@ export default function Home() {
     };
   }
 
-  function clearChat() {
-    setMessages([]);
-  }
-
-  async function handleSend() {
-    if (
-      input.toLowerCase().includes(
-        "generate image"
-      )
-    ) {
-      generateImage();
-    } else {
-      sendMessage();
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center p-8">
+    <main className="h-screen bg-black text-white flex">
 
-      <h1 className="text-7xl font-bold text-cyan-400 mb-8">
-        STERON
-      </h1>
+      <div className="w-80 bg-zinc-950 border-r border-cyan-500 flex flex-col">
 
-      <div className="w-full max-w-7xl h-[85vh] bg-zinc-950 border border-cyan-500 rounded-3xl flex flex-col overflow-hidden shadow-2xl shadow-cyan-500/20">
-
-        <div className="flex justify-between items-center p-4 border-b border-cyan-500">
-          <h2 className="text-3xl font-bold">
-            Chat with Steron
-          </h2>
-
+        <div className="p-4 border-b border-cyan-500">
           <button
-            onClick={clearChat}
-            className="bg-red-500 px-5 py-2 rounded-xl"
+            onClick={createNewChat}
+            className="w-full bg-cyan-500 hover:bg-cyan-400 transition text-black font-bold py-3 rounded-xl"
           >
-            Clear Chat
+            + New Chat
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
 
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                msg.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
+          {chats.map((chat) => (
+            <button
+              key={chat.id}
+              onClick={() =>
+                setActiveChatId(chat.id)
+              }
+              className={`w-full text-left p-4 rounded-xl transition ${
+                activeChatId === chat.id
+                  ? "bg-cyan-500 text-black"
+                  : "bg-zinc-900 hover:bg-zinc-800"
               }`}
             >
-              {msg.content.startsWith(
-                "data:image"
-              ) ? (
-                <img
-                  src={msg.content}
-                  alt="generated"
-                  className="rounded-2xl max-w-md border border-cyan-500"
-                />
-              ) : (
-                <div
-                  className={`max-w-[70%] p-5 rounded-3xl text-2xl ${
-                    msg.role === "user"
-                      ? "bg-cyan-500"
-                      : "bg-zinc-900"
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              )}
-            </div>
+              {chat.title}
+            </button>
           ))}
+
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col">
+
+        <div className="p-6 border-b border-cyan-500">
+          <h1 className="text-6xl font-bold text-cyan-400">
+            STERON
+          </h1>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
+
+          {activeChat.messages.map(
+            (msg, index) => (
+              <div
+                key={index}
+                className={`flex ${
+                  msg.role === "user"
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+                {msg.content.startsWith(
+                  "data:image"
+                ) ? (
+                  <img
+                    src={msg.content}
+                    alt="generated"
+                    className="rounded-2xl max-w-lg border border-cyan-500 shadow-xl shadow-cyan-500/20"
+                  />
+                ) : (
+                  <div
+                    className={`max-w-[70%] p-5 rounded-3xl text-2xl ${
+                      msg.role === "user"
+                        ? "bg-cyan-500 text-white"
+                        : "bg-zinc-900"
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                )}
+              </div>
+            )
+          )}
 
           {loading && (
             <div className="text-cyan-400 animate-pulse text-xl">
@@ -275,7 +346,7 @@ export default function Home() {
 
           <button
             onClick={startVoiceInput}
-            className="bg-purple-500 px-6 rounded-2xl text-xl"
+            className="bg-purple-500 hover:bg-purple-400 transition px-6 rounded-2xl text-xl"
           >
             🎤
           </button>
@@ -286,7 +357,7 @@ export default function Home() {
               setInput(e.target.value)
             }
             placeholder="Ask Steron something..."
-            className="flex-1 bg-black border border-cyan-500 rounded-2xl px-6 py-4 text-xl outline-none"
+            className="flex-1 bg-black border border-cyan-500 rounded-2xl px-6 py-4 text-xl outline-none focus:border-cyan-300"
           />
 
           <button
